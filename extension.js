@@ -19,7 +19,7 @@ function enable() {
     } else if(GLib.spawn_command_line_sync("which optirun")[3] === 0) {
         launcher = "Optirun"
     } else {
-        Main.notifyError("Gnome-optirun error", "Bumblebee is not installed");
+        Main.notifyError("gnome-optirun", "Error: Bumblebee is not installed");
 
         return;
     }
