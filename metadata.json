@@ -3,5 +3,5 @@
     "uuid": "gnome-optirun@TCG",
     "shell-version": ["3.14", "3.16"],
     "name": "Optirun",
-    "version": 2
+    "version": 3
 }
