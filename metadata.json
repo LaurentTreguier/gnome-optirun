@@ -1,7 +1,7 @@
 {
     "description": "Launch applications with optirun.",
     "uuid": "gnome-optirun@TCG",
-    "shell-version": ["3.14", "3.16"],
+    "shell-version": ["3.14", "3.16", "3.18"],
     "name": "Optirun",
     "version": 3
 }
