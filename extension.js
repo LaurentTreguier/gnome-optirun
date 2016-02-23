@@ -9,15 +9,17 @@ const extensionLocations = ["/usr", "~/.local"];
 
 let Aim = imports.ui.appDisplay.AppIconMenu;
 let origin;
-let launcher;
+let launcher_primusrun;
+let launcher_optirun;
 
 function enable() {
     origin = Aim.prototype._redisplay;
 
     if(GLib.spawn_command_line_sync("which primusrun")[3] === 0) {
-        launcher = "Primusrun"
-    } else if(GLib.spawn_command_line_sync("which optirun")[3] === 0) {
-        launcher = "Optirun"
+        launcher_primusrun = "Primusrun"
+    }
+    if(GLib.spawn_command_line_sync("which optirun")[3] === 0) {
+        launcher_optirun = "Optirun"
     } else {
         Main.notifyError("gnome-optirun", "Error: Bumblebee is not installed");
 
@@ -27,15 +29,27 @@ function enable() {
     Aim.prototype._redisplay = function () {
         origin.call(this, arguments);
 
-        this._optirun = new PopupMenu.PopupMenuItem(_(launcher));
-        this.addMenuItem(this._optirun, this._getMenuItems()
+        this._primusrun = new PopupMenu.PopupMenuItem(_(launcher_primusrun));
+        this.addMenuItem(this._primusrun, this._getMenuItems()
             .indexOf(this._newWindowMenuItem) + 1);
+        this._primusrun.connect("activate", Lang.bind(this, function () {
+            if(this._source.app.state == Shell.AppState.STOPPED) {
+                this._source.animateLaunch();
+            }
+
+            Util.spawnApp([launcher_primusrun.toLowerCase(), _getCommand(this._source.app.get_id())]);
+            this.emit('activate-window', null);
+        }));
+
+        this._optirun = new PopupMenu.PopupMenuItem(_(launcher_optirun));
+        this.addMenuItem(this._optirun, this._getMenuItems()
+            .indexOf(this._newWindowMenuItem) + 2);
         this._optirun.connect("activate", Lang.bind(this, function () {
             if(this._source.app.state == Shell.AppState.STOPPED) {
                 this._source.animateLaunch();
             }
 
-            Util.spawnApp([launcher.toLowerCase(), _getCommand(this._source.app.get_id())]);
+            Util.spawnApp([launcher_optirun.toLowerCase(), _getCommand(this._source.app.get_id())]);
             this.emit('activate-window', null);
         }));
     }
