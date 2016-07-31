@@ -15,43 +15,48 @@ let launcher_optirun;
 function enable() {
     origin = Aim.prototype._redisplay;
 
-    if(GLib.spawn_command_line_sync("which primusrun")[3] === 0) {
-        launcher_primusrun = "Primusrun"
+    if (GLib.spawn_command_line_sync("which primusrun")[3] === 0) {
+        launcher_primusrun = "Primusrun";
     }
-    if(GLib.spawn_command_line_sync("which optirun")[3] === 0) {
-        launcher_optirun = "Optirun"
+
+    if (GLib.spawn_command_line_sync("which optirun")[3] === 0) {
+        launcher_optirun = "Optirun";
     } else {
         Main.notifyError("gnome-optirun", "Error: Bumblebee is not installed");
-
         return;
     }
 
     Aim.prototype._redisplay = function () {
         origin.call(this, arguments);
 
-        this._primusrun = new PopupMenu.PopupMenuItem(_(launcher_primusrun));
-        this.addMenuItem(this._primusrun, this._getMenuItems()
-            .indexOf(this._newWindowMenuItem) + 1);
-        this._primusrun.connect("activate", Lang.bind(this, function () {
-            if(this._source.app.state == Shell.AppState.STOPPED) {
-                this._source.animateLaunch();
-            }
+        let i = 1;
 
-            Util.spawnApp([launcher_primusrun.toLowerCase(), _getCommand(this._source.app.get_id())]);
-            this.emit('activate-window', null);
-        }));
+        if (launcher_primusrun) {
+            this._primusrun = new PopupMenu.PopupMenuItem(_(launcher_primusrun));
+            this.addMenuItem(this._primusrun, this._getMenuItems().indexOf(this._newWindowMenuItem) + i);
+            this._primusrun.connect("activate", Lang.bind(this, function () {
+                if (this._source.app.state == Shell.AppState.STOPPED) {
+                    this._source.animateLaunch();
+                }
 
-        this._optirun = new PopupMenu.PopupMenuItem(_(launcher_optirun));
-        this.addMenuItem(this._optirun, this._getMenuItems()
-            .indexOf(this._newWindowMenuItem) + 2);
-        this._optirun.connect("activate", Lang.bind(this, function () {
-            if(this._source.app.state == Shell.AppState.STOPPED) {
-                this._source.animateLaunch();
-            }
+                Util.spawnApp([launcher_primusrun.toLowerCase(), _getCommand(this._source.app.get_id())]);
+                this.emit('activate-window', null);
+            }));
+            ++i;
+        }
 
-            Util.spawnApp([launcher_optirun.toLowerCase(), _getCommand(this._source.app.get_id())]);
-            this.emit('activate-window', null);
-        }));
+        if (launcher_optirun) {
+            this._optirun = new PopupMenu.PopupMenuItem(_(launcher_optirun));
+            this.addMenuItem(this._optirun, this._getMenuItems().indexOf(this._newWindowMenuItem) + i);
+            this._optirun.connect("activate", Lang.bind(this, function () {
+                if (this._source.app.state == Shell.AppState.STOPPED) {
+                    this._source.animateLaunch();
+                }
+
+                Util.spawnApp([launcher_optirun.toLowerCase(), _getCommand(this._source.app.get_id())]);
+                this.emit('activate-window', null);
+            }));
+        }
     }
 }
 
@@ -60,13 +65,13 @@ function disable() {
 }
 
 function _getCommand(file) {
-    for(let i in extensionLocations) {
+    for (let i in extensionLocations) {
         try {
             let content = GLib.file_get_contents(extensionLocations[i] + "/share/applications/" + file)[1];
             let line = /Exec=.+/.exec(content)[0];
 
             return line.substr(5);
-        } catch(error) {
+        } catch (error) {
             log(error);
         }
     }
