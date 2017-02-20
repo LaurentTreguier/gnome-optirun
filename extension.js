@@ -7,7 +7,7 @@ const Util = imports.misc.util;
 
 const EXTENSION_NAME = "gnome-optirun";
 const EXTENSION_AUTHOR = "TCG";
-const EXTENSION_LOCATIONS = ["/usr", "~/.local"];
+const EXTENSION_LOCATIONS = ["/usr", GLib.get_home_dir() + "/.local"];
 
 let Aim = imports.ui.appDisplay.AppIconMenu;
 let origin;
