@@ -7,7 +7,7 @@ const Util = imports.misc.util;
 
 const EXTENSION_NAME = "gnome-optirun";
 const EXTENSION_AUTHOR = "TCG";
-const EXTENSION_LOCATIONS = ["/usr", GLib.get_home_dir() + "/.local"];
+const DATA_DIRECTORIES = ["/usr", GLib.get_home_dir() + "/.local"];
 
 let Aim = imports.ui.appDisplay.AppIconMenu;
 let origin;
@@ -26,60 +26,35 @@ function enable() {
     if (GLib.spawn_command_line_sync("which optirun")[3] === 0) {
         launcher_optirun = "Optirun";
     } else {
-        Main.notifyError("gnome-optirun", "Error: Bumblebee is not installed");
+        Main.notifyError("gnome-optirun", _("Error: Bumblebee is not installed"));
         return;
     }
 
     Aim.prototype._redisplay = function () {
         origin.call(this, arguments);
-
         let i = 1;
 
-        if (launcher_primusrun) {
-            this._primusrun = new PopupMenu.PopupMenuItem(_(launcher_primusrun));
-            this.addMenuItem(this._primusrun, this._getMenuItems().indexOf(this._newWindowMenuItem) + i);
-            this._primusrun.connect("activate", Lang.bind(this, function () {
-                if (this._source.app.state == Shell.AppState.STOPPED) {
-                    this._source.animateLaunch();
-                }
+        this.addMenuItem(new PopupMenu.PopupSeparatorMenuItem(), _getNewWindowIndex(this) + i);
+        ++i;
 
-                Util.spawnApp([launcher_primusrun.toLowerCase(), _getCommand(this._source.app.get_id())]);
-                this.emit('activate-window', null);
-            }));
+        if (launcher_primusrun) {
+            _addLauncher(this, launcher_primusrun, launcher_primusrun.toLowerCase(), i);
             ++i;
 
-            this._optiprime = new PopupMenu.PopupMenuItem(_(launcher_optiprime));
-            this.addMenuItem(this._optiprime, this._getMenuItems().indexOf(this._newWindowMenuItem) + i);
-            this._optiprime.connect("activate", Lang.bind(this, function () {
-                if (this._source.app.state == Shell.AppState.STOPPED) {
-                    this._source.animateLaunch();
-                }
+            let optiprimeFile = [
+                GLib.get_user_data_dir(),
+                "gnome-shell",
+                "extensions",
+                EXTENSION_NAME + "@" + EXTENSION_AUTHOR,
+                "optiprime"
+            ].join("/");
 
-                let optiprimeFile = [
-                    GLib.get_user_data_dir(),
-                    "gnome-shell",
-                    "extensions",
-                    EXTENSION_NAME + "@" + EXTENSION_AUTHOR,
-                    "optiprime"
-                ].join("/");
-
-                Util.spawnApp([optiprimeFile, _getCommand(this._source.app.get_id())]);
-                this.emit('activate-window', null);
-            }));
+            _addLauncher(this, launcher_optiprime, optiprimeFile, i);
             ++i;
         }
 
         if (launcher_optirun) {
-            this._optirun = new PopupMenu.PopupMenuItem(_(launcher_optirun));
-            this.addMenuItem(this._optirun, this._getMenuItems().indexOf(this._newWindowMenuItem) + i);
-            this._optirun.connect("activate", Lang.bind(this, function () {
-                if (this._source.app.state == Shell.AppState.STOPPED) {
-                    this._source.animateLaunch();
-                }
-
-                Util.spawnApp([launcher_optirun.toLowerCase(), _getCommand(this._source.app.get_id())]);
-                this.emit('activate-window', null);
-            }));
+            _addLauncher(this, launcher_optirun, launcher_optirun.toLowerCase(), i);
         }
     }
 }
@@ -88,10 +63,34 @@ function disable() {
     Aim.prototype._redisplay = origin;
 }
 
+function _addLauncher(self, name, command, i) {
+    let launcher = new PopupMenu.PopupMenuItem(_(name));
+
+    self.addMenuItem(launcher, _getNewWindowIndex(self) + i);
+    launcher.connect("activate", Lang.bind(self, function () {
+        if (self._source.app.state == Shell.AppState.STOPPED) {
+            self._source.animateLaunch();
+        }
+
+        Util.spawnApp([command, _getCommand(self._source.app.get_id())]);
+        self.emit("activate-window", null);
+    }));
+}
+
+function _getNewWindowIndex(self) {
+    let appInfo = self._source.app.get_app_info();
+    let windows = self._source.app.get_windows();
+    let actions = appInfo.list_actions();
+
+    return self._newWindowMenuItem
+        ? self._getMenuItems().indexOf(self._newWindowMenuItem)
+        : actions.indexOf("new-window") + windows.length + actions.length;
+}
+
 function _getCommand(file) {
-    for (let i in EXTENSION_LOCATIONS) {
+    for (let i in DATA_DIRECTORIES) {
         try {
-            let content = GLib.file_get_contents(EXTENSION_LOCATIONS[i] + "/share/applications/" + file)[1];
+            let content = GLib.file_get_contents(DATA_DIRECTORIES[i] + "/share/applications/" + file)[1];
             let line = /Exec=.+/.exec(content)[0];
 
             return line.substr(5);
