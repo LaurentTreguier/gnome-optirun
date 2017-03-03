@@ -84,7 +84,7 @@ function _getNewWindowIndex(self) {
 
     return self._newWindowMenuItem
         ? self._getMenuItems().indexOf(self._newWindowMenuItem)
-        : actions.indexOf("new-window") + windows.length + actions.length;
+        : windows.length + actions.length;
 }
 
 function _getCommand(file) {
