@@ -4,5 +4,5 @@
     "url": "https://github.com/LaurentTreguier/gnome-optirun",
     "shell-version": ["3.14", "3.16", "3.18", "3.20", "3.22", "3.24", "3.26", "3.28"],
     "name": "Optirun",
-    "version": 15
+    "version": 16
 }
